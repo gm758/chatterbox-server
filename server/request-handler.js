@@ -12,9 +12,6 @@ var requestHandler = function(request, response) {
   var extname = path.extname(filePath);
   var contentType = 'text/html';
   var body;
-  // var query = url.parse(request.url, true).query;
-  // // var username = query.username || 'anonymous';
-  // // var roomname = query.roomname || 'obby';
 
   if (extname === '.js') {
     contentType = 'application/javascript';
