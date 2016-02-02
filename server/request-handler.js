@@ -12,9 +12,9 @@ var requestHandler = function(request, response) {
   var extname = path.extname(filePath);
   var contentType = 'text/html';
   var body;
-  var query = url.parse(request.url, true).query;
-  var username = query.username || 'anonymous';
-  var roomname = query.roomname || 'lobby';
+  // var query = url.parse(request.url, true).query;
+  // // var username = query.username || 'anonymous';
+  // // var roomname = query.roomname || 'obby';
 
   if (extname === '.js') {
     contentType = 'application/javascript';
@@ -25,13 +25,6 @@ var requestHandler = function(request, response) {
   if (request.method === 'GET' && filePath.indexOf('classes') !== -1) {
     response.writeHead(200, {'Content-Type': 'application/json'});
     response.end(JSON.stringify({results: messages}));
-    // body = [];
-    // request.on('data', function(chunk) {
-    //   body.push(chunk);
-    // }).on('end', function() {
-    //   body = Buffer.concat(body).toString();
-    //   response.end(body);
-    // });
   //page load
   } else if (request.method === 'GET') {
     var fileContent = fs.readFileSync(filePath);
@@ -44,7 +37,9 @@ var requestHandler = function(request, response) {
     request.on('data', function(chunk) {
       body += chunk.toString();
     }).on('end', function(){
-      messages.push(JSON.parse(body));
+      var bodyObj = JSON.parse(body);
+      bodyObj.objectId = messages.length;
+      messages.push(bodyObj);
       response.writeHead(201, headers);
       response.end(body);
     });
