@@ -1,97 +1,57 @@
 var requestHandler = function(request, response) {
   console.log("Serving request type " + request.method + " for url " + request.url);
+  var url = require('url');
   var path = require('path');
   var fs = require('fs');
+  var messages = require('./messages.js');
   var headers = defaultCorsHeaders;
-  var filePath = '../client' + request.url;
+  var filePath = '../client' + url.parse(request.url).pathname;
   if (filePath === '../client/') {
     filePath = '../client/index.html';
   }
   var extname = path.extname(filePath);
   var contentType = 'text/html';
   var body;
+  var query = url.parse(request.url, true).query;
+  var username = query.username || 'anonymous';
+  var roomname = query.roomname || 'lobby';
 
   if (extname === '.js') {
     contentType = 'application/javascript';
   } else if (extname === '.css') {
     contentType = 'text/css';
   }
-
-
-  //get request from ajax
+  //ajax get request
   if (request.method === 'GET' && filePath.indexOf('classes') !== -1) {
-    body = [];
-    response.statusCode = 200;
-    request.on('data', function(chunk) {
-      body.push(chunk);
-    }).on('end', function() {
-      body = Buffer.concat(body).toString();
-      response.end(body);
-    });
-  //get request from page load
+    response.end(JSON.stringify(messages));
+    // body = [];
+    // response.writeHead(200, {'Content-Type': 'application/json'});
+    // request.on('data', function(chunk) {
+    //   body.push(chunk);
+    // }).on('end', function() {
+    //   body = Buffer.concat(body).toString();
+    //   response.end(body);
+    // });
+  //page load
   } else if (request.method === 'GET') {
-    var html = fs.readFileSync(filePath);
+    var fileContent = fs.readFileSync(filePath);
     response.writeHead(200, {'Content-Type': contentType});
-    response.end(html);
-  //post request from ajax
+    response.end(fileContent);
+  //ajax post request
   } else if (request.method === 'POST') {
-    response.statusCode = 201;
+    headers['Content-Type'] = contentType;
     body = '';
     request.on('data', function(chunk) {
       body += chunk.toString();
-      console.log('on data');
     }).on('end', function(){
-      response.writeHead(statusCode, headers);
+      messages.push(JSON.parse(body));
+      response.writeHead(201, headers);
       response.end(body);
     });
-  //illegal page
   } else {
     response.statusCode = 404;
     response.end();
   }
-
-  
-  // var statusCode;
-  // var headers = defaultCorsHeaders;
-  // var url = require('url');
-  // var fs = require('fs');
-
-  // var pathname = url.parse(request.url).pathname;
-  // var roomName;
-
-  // headers['Content-Type'] = "application/json";
-
-  // if (pathname.split('/')[1] !== 'classes') {
-  //   statusCode = 404;
-  //   response.writeHead(statusCode, headers);
-  //   response.end('');
-  // } else {
-  //   roomName = pathname.split('/')[2];
-
-  //   var _data = require('./messages.js');
-
-  //   if (request.method === 'POST') {
-  //     statusCode = 201;
-
-  //     var fullBody = '';
-      
-  //     request.on('data', function(chunk) {
-  //       fullBody += chunk.toString();
-  //     });
-
-  //     request.on('end', function() {
-  //       _data.push(JSON.parse(fullBody));
-  //       response.writeHead(statusCode, headers);
-  //       response.end(JSON.stringify(_data));
-  //     });
-  //   } else if (request.method === 'GET') {
-  //     statusCode = 200;
-  //     response.writeHead(statusCode, headers); 
-  //     response.end(JSON.stringify({results: _data}));
-
-  //   } 
-
-  // }
 
 };
 
