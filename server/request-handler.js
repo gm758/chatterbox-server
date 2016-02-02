@@ -1,75 +1,85 @@
-/*************************************************************
-
-You should implement your request handler function in this file.
-
-requestHandler is already getting passed to http.createServer()
-in basic-server.js, but it won't work as is.
-
-You'll have to figure out a way to export this function from
-this file and include it in basic-server.js so that it actually works.
-
-*Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
-
-**************************************************************/
-
 var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  //
-  // They include information about both the incoming request, such as
-  // headers and URL, and about the outgoing response, such as its status
-  // and content.
-  //
-  // Documentation for both request and response can be found in the HTTP section at
-  // http://nodejs.org/documentation/api/
-
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
-  
-  var statusCode;
-  var headers = defaultCorsHeaders;
   var url = require('url');
   var fs = require('fs');
-
+  var headers = defaultCorsHeaders;
   var pathname = url.parse(request.url).pathname;
-  var roomName;
+  var body;
 
-  headers['Content-Type'] = "application/json";
-
-  if (pathname.split('/')[1] !== 'classes') {
-    statusCode = 404;
-    response.writeHead(statusCode, headers);
-    response.end('');
+  //get request from ajax
+  if (request.method === 'GET' && pathname.indexOf('/classes/') !== -1) {
+    body = [];
+    response.statusCode = 200;
+    request.on('data', function(chunk) {
+      body.push(chunk);
+    }).on('end', function() {
+      body = Buffer.concat(body).toString();
+      response.end(body);
+    });
+  //get request from page load
+  } else if (request.method === 'GET') {
+    var html = fs.readFileSync('../client/index.html');
+    response.writeHead(200, {'Content-Type': 'text/html'});
+    response.end(html);
+  //post request from ajax
+  } else if (request.method === 'POST') {
+    response.statusCode = 201;
+    body = '';
+    request.on('data', function(chunk) {
+      body += chunk.toString();
+      console.log('on data');
+    }).on('end', function(){
+      response.writeHead(statusCode, headers);
+      response.end(body);
+    });
+  //illegal page
   } else {
-    roomName = pathname.split('/')[2];
-
-    var _data = require('./messages.js');
-
-    if (request.method === 'POST') {
-      statusCode = 201;
-
-      var fullBody = '';
-      
-      request.on('data', function(chunk) {
-        fullBody += chunk.toString();
-      });
-
-      request.on('end', function() {
-        _data.push(JSON.parse(fullBody));
-        response.writeHead(statusCode, headers);
-        response.end(JSON.stringify(_data));
-      });
-    } else if (request.method === 'GET') {
-      statusCode = 200;
-      response.writeHead(statusCode, headers); 
-      response.end(JSON.stringify({results: _data}));
-
-    } 
-
+    response.statusCode = 404;
+    response.end();
   }
+
+  
+  // var statusCode;
+  // var headers = defaultCorsHeaders;
+  // var url = require('url');
+  // var fs = require('fs');
+
+  // var pathname = url.parse(request.url).pathname;
+  // var roomName;
+
+  // headers['Content-Type'] = "application/json";
+
+  // if (pathname.split('/')[1] !== 'classes') {
+  //   statusCode = 404;
+  //   response.writeHead(statusCode, headers);
+  //   response.end('');
+  // } else {
+  //   roomName = pathname.split('/')[2];
+
+  //   var _data = require('./messages.js');
+
+  //   if (request.method === 'POST') {
+  //     statusCode = 201;
+
+  //     var fullBody = '';
+      
+  //     request.on('data', function(chunk) {
+  //       fullBody += chunk.toString();
+  //     });
+
+  //     request.on('end', function() {
+  //       _data.push(JSON.parse(fullBody));
+  //       response.writeHead(statusCode, headers);
+  //       response.end(JSON.stringify(_data));
+  //     });
+  //   } else if (request.method === 'GET') {
+  //     statusCode = 200;
+  //     response.writeHead(statusCode, headers); 
+  //     response.end(JSON.stringify({results: _data}));
+
+  //   } 
+
+  // }
 
 };
 
