@@ -23,9 +23,9 @@ var requestHandler = function(request, response) {
   }
   //ajax get request
   if (request.method === 'GET' && filePath.indexOf('classes') !== -1) {
-    response.end(JSON.stringify(messages));
+    response.writeHead(200, {'Content-Type': 'application/json'});
+    response.end(JSON.stringify({results: messages}));
     // body = [];
-    // response.writeHead(200, {'Content-Type': 'application/json'});
     // request.on('data', function(chunk) {
     //   body.push(chunk);
     // }).on('end', function() {
