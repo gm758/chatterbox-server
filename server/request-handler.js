@@ -1,13 +1,25 @@
 var requestHandler = function(request, response) {
   console.log("Serving request type " + request.method + " for url " + request.url);
-  var url = require('url');
+  var path = require('path');
   var fs = require('fs');
   var headers = defaultCorsHeaders;
-  var pathname = url.parse(request.url).pathname;
+  var filePath = '../client' + request.url;
+  if (filePath === '../client/') {
+    filePath = '../client/index.html';
+  }
+  var extname = path.extname(filePath);
+  var contentType = 'text/html';
   var body;
 
+  if (extname === '.js') {
+    contentType = 'application/javascript';
+  } else if (extname === '.css') {
+    contentType = 'text/css';
+  }
+
+
   //get request from ajax
-  if (request.method === 'GET' && pathname.indexOf('/classes/') !== -1) {
+  if (request.method === 'GET' && filePath.indexOf('classes') !== -1) {
     body = [];
     response.statusCode = 200;
     request.on('data', function(chunk) {
@@ -18,8 +30,8 @@ var requestHandler = function(request, response) {
     });
   //get request from page load
   } else if (request.method === 'GET') {
-    var html = fs.readFileSync('../client/index.html');
-    response.writeHead(200, {'Content-Type': 'text/html'});
+    var html = fs.readFileSync(filePath);
+    response.writeHead(200, {'Content-Type': contentType});
     response.end(html);
   //post request from ajax
   } else if (request.method === 'POST') {
