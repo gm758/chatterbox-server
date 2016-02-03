@@ -10,7 +10,11 @@ exports.sendResponse = function(response, data, statusCode, contentType) {
   statusCode = statusCode || 200;
   headers['Content-Type'] = contentType || headers['Content-Type'];
   response.writeHead(statusCode, headers);
-  response.end(JSON.stringify(data));
+  if (headers['Content-Type'] === 'application/json') {
+    response.end(JSON.stringify(data));
+  } else {
+    response.end(data);
+  }
 };
 
 exports.collectData = function(request, callback) {
@@ -23,10 +27,10 @@ exports.collectData = function(request, callback) {
 };
 
 exports.makeActionHandler = function(actionMap) {
-  return function(request, response) {
+  return function(request, response, pathname) {
     var action = actionMap[request.method];
     if (action) {
-      action(request, response);
+      action(request, response, pathname);
     } else {
       exports.sendResponse(response, '', 404);
     }

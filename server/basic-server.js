@@ -1,7 +1,10 @@
 /* Import node's http module: */
 var http = require("http");
-var handleRequest = require('./request-handler.js').requestHandler;
-var url = require('url');
+var url = require("url");
+var handleRequest = require("./request-handler");
+var serveStaticFile = require("./serveStaticFile");
+var renderHtml = require("./renderHtml");
+var utils = require("./utils");
 
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
@@ -16,12 +19,13 @@ var port = 3000;
 var ip = "127.0.0.1";
 
 var router = {
-  '/classes/messages': handleRequest,
-  '/': renderHtml,
-  '/index.html': renderHtml,
-  '/env': serveStaticFile,
-  '/scripts': serveStaticFile,
-  '/bower_components': serveStaticFile 
+  '/classes/chatterbox': handleRequest.requestHandler,
+  '/': renderHtml.requestHandler,
+  '/index.html': renderHtml.requestHandler,
+  '/env/config.js': serveStaticFile.requestHandler,
+  '/scripts/app.js': serveStaticFile.requestHandler,
+  '/bower_components/jquery/dist/jquery.js': serveStaticFile.requestHandler,
+  '/styles/styles.css': serveStaticFile.requestHandler  
 };
 
 // We use node's http module to create a server.
@@ -37,9 +41,7 @@ var server = http.createServer(function(request, response) {
   if (route) {
     route(request, response, pathname);
   } else {
-    statusCode = 404;
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(''));
+    utils.sendResponse(response, '', 404);
   }
 });
 
